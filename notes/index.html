@@ -36,8 +36,34 @@
     .nc-icon { font-size: 26px; line-height: 1; }
     .nc-name { font-size: 14.5px; font-weight: 500; color: var(--white); letter-spacing: -.01em; }
     .nc-desc { font-size: 12.5px; color: var(--mist-6); line-height: 1.5; flex: 1; }
-    .nc-arr  { font-size: 16px; color: var(--mist-6); align-self: flex-end; transition: all var(--t); }
+    .nc-foot { display: flex; align-items: center; justify-content: space-between; }
+    .nc-arr  { font-size: 16px; color: var(--mist-6); transition: all var(--t); }
     .note-card:hover .nc-arr { color: var(--white); transform: translateX(3px); }
+    .nc-dl {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: var(--radius-sm);
+      border: 1px solid var(--ink-3); background: none;
+      font-family: var(--mono); font-size: 10px; color: var(--mist-6);
+      text-decoration: none; cursor: pointer;
+      transition: all var(--t);
+    }
+    .nc-dl:hover { border-color: var(--green); color: var(--green); background: rgba(52,201,138,.06); }
+
+    .notes-search {
+      margin-bottom: 18px; position: relative;
+    }
+    .notes-search input {
+      width: 100%; max-width: 400px;
+      background: var(--ink-1); border: 1px solid var(--ink-3);
+      border-radius: var(--radius-sm); padding: 9px 14px 9px 34px;
+      font-family: var(--mono); font-size: 12.5px; color: var(--mist-4); outline: none;
+      transition: border-color var(--t);
+    }
+    .notes-search input:focus { border-color: var(--blue); background: var(--ink-2); }
+    .notes-search input::placeholder { color: var(--ink-4); }
+    .notes-search .ns-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--ink-4); pointer-events: none; }
+    .nc-match { font-size: 11px; color: var(--mist-6); font-family: var(--mono); margin-top: 2px; background: var(--ink-2); padding: 4px 8px; border-radius: 4px; line-height: 1.5; }
+    .nc-match em { font-style: normal; color: var(--blue); font-weight: 500; }
 
     .add-hint {
       margin-top: 32px; padding: 16px 20px;
@@ -71,9 +97,12 @@
     </div>
 
     <div class="a-in d1">
-      <div class="s-label">Dostępne zestawy</div>
-      <div class="notes-grid" id="notesGrid"></div>
-
+      <div class="notes-search">
+        <span class="ns-icon">⌕</span>
+        <input id="noteSearch" type="text" placeholder="Szukaj notatki..." autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="tabs" id="tabBar"></div>
+      <div id="panels"></div>
     </div>
   </div>
 
@@ -84,25 +113,140 @@
   <script src="../assets/js/shared.js"></script>
   <script>
   (function(){
-    const notes = (window.SH || {}).notes || [];
-    const grid  = document.getElementById('notesGrid');
+    const { semesters, notes } = window.SH || {};
+    if (!semesters || !notes) return;
 
-    if (!notes.length) {
-      grid.innerHTML = `<p style="color:var(--mist-6);font-size:13px">Brak notatek. Dodaj je zgodnie z instrukcją poniżej.</p>`;
-      return;
+    const tabBar  = document.getElementById('tabBar');
+    const panels  = document.getElementById('panels');
+    const searchInput = document.getElementById('noteSearch');
+
+    /* ── Flatten all notes for search ── */
+    function allNotes(){
+      return Object.values(notes).flat();
     }
 
-    notes.forEach(n => {
+    /* ── Build tab panels ── */
+    semesters.forEach((s, i) => {
+      const tab = document.createElement('button');
+      tab.className = 'tab' + (i===0 ? ' active' : '');
+      tab.textContent = s.label;
+      tab.onclick = () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('np-' + s.id).classList.add('active');
+      };
+      tabBar.appendChild(tab);
+
+      const panel = document.createElement('div');
+      panel.id = 'np-' + s.id;
+      panel.className = 'tab-panel' + (i===0 ? ' active' : '');
+
+      const list = notes[s.id] || [];
+      if (!list.length) {
+        panel.innerHTML = '<div class="empty"><div class="e-icon">📭</div><h3>Brak notatek</h3><p>Notatki dla ' + s.label + ' pojawią się tutaj po dodaniu.</p></div>';
+      } else {
+        const grid = document.createElement('div');
+        grid.className = 'notes-grid';
+        list.forEach(n => {
+          grid.appendChild(buildCard(n));
+        });
+        panel.appendChild(grid);
+      }
+      panels.appendChild(panel);
+    });
+
+    function buildCard(n, matchLine) {
       const a = document.createElement('a');
       a.className = 'note-card a-in';
-      a.href = `viewer.html?id=${encodeURIComponent(n.id)}`;
-      a.innerHTML = `
-        <div class="nc-icon">${n.emoji || '📝'}</div>
-        <div class="nc-name">${n.name}</div>
-        <div class="nc-desc">${n.desc || ''}</div>
-        <div class="nc-arr">→</div>`;
-      grid.appendChild(a);
+      a.href = 'viewer.html?id=' + encodeURIComponent(n.id);
+      a.innerHTML =
+        '<div class="nc-icon">' + (n.emoji || '📝') + '</div>' +
+        '<div class="nc-name">' + escHtml(n.name) + '</div>' +
+        '<div class="nc-desc">' + escHtml(n.desc || '') + '</div>' +
+        (matchLine ? '<div class="nc-match">' + matchLine + '</div>' : '') +
+        '<div class="nc-foot">' +
+          '<a class="nc-dl" href="' + escHtml(n.file) + '" download title="Pobierz plik .md" onclick="event.stopPropagation()">↓ .md</a>' +
+          '<span class="nc-arr">→</span>' +
+        '</div>';
+      return a;
+    }
+
+    function escHtml(s){
+      const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+
+    /* ── SEARCH ── */
+    let timer;
+    searchInput.addEventListener('input', function(){
+      clearTimeout(timer);
+      timer = setTimeout(function(){ doSearch(searchInput.value.trim()); }, 200);
     });
+
+    function doSearch(q) {
+      /* If empty, restore original panels */
+      if (!q || q.length < 2) {
+        restorePanels();
+        return;
+      }
+      const lower = q.toLowerCase();
+      const matched = [];
+
+      allNotes().forEach(n => {
+        const inName = n.name.toLowerCase().includes(lower);
+        const inDesc = (n.desc||'').toLowerCase().includes(lower);
+        if (inName || inDesc) {
+          const line = highlight(inName ? n.name : n.desc, q);
+          matched.push({ note: n, line: line });
+        }
+      });
+
+      /* Hide tabs, show flat search results */
+      tabBar.style.display = 'none';
+      panels.innerHTML = '';
+
+      if (!matched.length) {
+        panels.innerHTML = '<div class="empty"><div class="e-icon">🔍</div><h3>Brak wyników</h3><p>Nie znaleziono notatek dla „' + escHtml(q) + '".</p></div>';
+        return;
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'notes-grid';
+      matched.forEach(m => {
+        grid.appendChild(buildCard(m.note, m.line));
+      });
+      panels.appendChild(grid);
+    }
+
+    function highlight(text, q) {
+      const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return text.replace(new RegExp('(' + esc + ')', 'gi'), '<em>$1</em>');
+    }
+
+    function restorePanels() {
+      tabBar.style.display = '';
+      panels.innerHTML = '';
+      semesters.forEach((s, i) => {
+        const panel = document.createElement('div');
+        panel.id = 'np-' + s.id;
+        panel.className = 'tab-panel' + (i===0 ? ' active' : '');
+
+        const list = notes[s.id] || [];
+        if (!list.length) {
+          panel.innerHTML = '<div class="empty"><div class="e-icon">📭</div><h3>Brak notatek</h3><p>Notatki dla ' + s.label + ' pojawią się tutaj po dodaniu.</p></div>';
+        } else {
+          const grid = document.createElement('div');
+          grid.className = 'notes-grid';
+          list.forEach(n => { grid.appendChild(buildCard(n)); });
+          panel.appendChild(grid);
+        }
+        panels.appendChild(panel);
+      });
+      /* Re-activate correct tab */
+      const activeTab = tabBar.querySelector('.tab.active');
+      if (activeTab) activeTab.click();
+    }
+
   })();
   </script>
 </body>

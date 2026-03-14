@@ -259,14 +259,18 @@
         </div>
       </a>
 
-      <div class="mod mod-coming">
-        <div class="mod-icon" style="--icon-bg:var(--ink-2);--icon-border:var(--ink-3)">📊</div>
+      <div class="mod mod-amber" id="pomodoroCard" style="cursor:default">
+        <div class="mod-icon" style="--icon-bg:rgba(240,160,48,.08);--icon-border:rgba(240,160,48,.18)">🍅</div>
         <div>
-          <div class="mod-title" style="color:var(--mist-5)">Statystyki</div>
-          <div class="mod-desc">Śledzenie postępów w nauce. Wkrótce.</div>
+          <div class="mod-title">Pomodoro</div>
+          <div class="mod-desc" style="margin-bottom:8px">Timer do nauki. Kliknij na czas aby edytować.</div>
         </div>
-        <div class="mod-footer">
-          <span class="badge badge-muted">Wkrótce</span>
+        <div style="text-align:center">
+          <div id="pomoDisplay" style="font-family:var(--mono);font-size:36px;font-weight:600;color:var(--white);letter-spacing:-.03em;cursor:pointer;margin-bottom:10px" title="Kliknij aby edytować">25:00</div>
+          <div style="display:flex;gap:8px;justify-content:center">
+            <button class="btn btn-primary" id="pomoStartBtn" style="padding:7px 16px;font-size:12.5px">▶ Start</button>
+            <button class="btn btn-secondary" id="pomoResetBtn" style="padding:7px 16px;font-size:12.5px">↻ Reset</button>
+          </div>
         </div>
       </div>
 
@@ -279,14 +283,53 @@
   <script src="assets/js/config.js"></script>
   <script src="assets/js/shared.js"></script>
   <script>
-    document.getElementById('yr').textContent = new Date().getFullYear();
     if (window.SH) {
       const allFiles  = Object.values(SH.files).flatMap(s => [...(s.java||[]), ...(s.r||[])]);
       const allQuiz   = Object.values(SH.quizzes).flat();
+      const allNotes  = Object.values(SH.notes).flat();
       document.getElementById('sFiles').textContent  = allFiles.length  || '0';
       document.getElementById('sQuiz').textContent   = allQuiz.length   || '0';
-      document.getElementById('sNotes').textContent  = (SH.notes||[]).length || '0';
+      document.getElementById('sNotes').textContent  = allNotes.length  || '0';
     }
+
+    /* ── POMODORO ── */
+    (function(){
+      let totalSec = 25 * 60, remaining = totalSec, running = false, iv = null;
+      const display  = document.getElementById('pomoDisplay');
+      const startBtn = document.getElementById('pomoStartBtn');
+      const resetBtn = document.getElementById('pomoResetBtn');
+
+      function fmt(s) { return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+      function update() { display.textContent = fmt(remaining); }
+
+      function tick() {
+        if (remaining <= 0) { clearInterval(iv); iv = null; running = false; startBtn.textContent = '▶ Start'; return; }
+        remaining--;
+        update();
+      }
+
+      startBtn.addEventListener('click', function() {
+        if (running) { clearInterval(iv); iv = null; running = false; startBtn.textContent = '▶ Start'; }
+        else { iv = setInterval(tick, 1000); running = true; startBtn.textContent = '⏸ Pauza'; }
+      });
+
+      resetBtn.addEventListener('click', function() {
+        clearInterval(iv); iv = null; running = false;
+        remaining = totalSec; update(); startBtn.textContent = '▶ Start';
+      });
+
+      display.addEventListener('click', function() {
+        if (running) return;
+        const val = prompt('Ustaw czas (minuty):', Math.floor(totalSec / 60));
+        if (val === null) return;
+        let m = parseInt(val, 10);
+        if (isNaN(m) || m < 1) m = 25;
+        if (m > 180) m = 180;
+        totalSec = m * 60; remaining = totalSec; update();
+      });
+
+      update();
+    })();
   </script>
 </body>
 </html>
