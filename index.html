@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xav</title>
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <style>
+    /* ── HERO ── */
+    .hero {
+      padding: 80px 0 64px;
+      position: relative;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em;
+      color: var(--blue); margin-bottom: 22px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block; width: 20px; height: 1px;
+      background: var(--blue);
+    }
+    .hero h1 {
+      font-size: clamp(36px, 5.5vw, 58px);
+      font-weight: 600; letter-spacing: -.04em;
+      color: var(--white); line-height: 1.08;
+      margin-bottom: 20px;
+    }
+    .hero h1 em { font-style: normal; color: var(--blue); }
+    .hero-sub {
+      font-size: 16px; color: var(--mist-6);
+      max-width: 420px; line-height: 1.65; margin-bottom: 36px;
+    }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* subtle grid bg */
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(var(--ink-3) 1px, transparent 1px),
+        linear-gradient(90deg, var(--ink-3) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 80% at 50% 0%, black, transparent);
+      opacity: .35;
+    }
+
+    /* ── MODULE GRID ── */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 0;
+    }
+    @media (max-width: 640px) { .module-grid { grid-template-columns: 1fr; } }
+
+    .mod {
+      background: var(--ink-1);
+      border: 1px solid var(--ink-3);
+      border-radius: var(--radius-lg);
+      padding: 28px 26px;
+      text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; gap: 14px;
+      position: relative; overflow: hidden;
+      transition: border-color var(--t), transform var(--t), box-shadow var(--t);
+    }
+    .mod:hover {
+      border-color: var(--ink-4);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0,0,0,.3);
+    }
+    .mod-coming {
+      opacity: .45; cursor: default; pointer-events: none;
+    }
+
+    /* accent line top */
+    .mod::before {
+      content: ''; position: absolute;
+      top: 0; left: 20px; right: 20px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line-c, var(--blue)), transparent);
+      opacity: 0;
+      transition: opacity var(--t);
+    }
+    .mod:hover::before { opacity: 1; }
+
+    .mod-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--icon-bg, var(--blue-dim));
+      border: 1px solid var(--icon-border, var(--blue-line));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .mod-title {
+      font-size: 16px; font-weight: 600;
+      color: var(--white); letter-spacing: -.02em;
+    }
+    .mod-desc {
+      font-size: 13.5px; color: var(--mist-6);
+      line-height: 1.55;
+    }
+    .mod-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: auto; padding-top: 4px;
+    }
+    .mod-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .mod-tag {
+      font-family: var(--mono); font-size: 10.5px;
+      color: var(--mist-6); background: var(--ink-2);
+      border: 1px solid var(--ink-3);
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .mod-arrow {
+      font-size: 16px; color: var(--mist-6);
+      transition: color var(--t), transform var(--t);
+    }
+    .mod:hover .mod-arrow { color: var(--white); transform: translateX(3px); }
+
+    /* color variants */
+    .mod-blue   { --line-c: var(--blue); --icon-bg: var(--blue-dim); --icon-border: var(--blue-line); }
+    .mod-green  { --line-c: var(--green); --icon-bg: rgba(52,201,138,.08); --icon-border: rgba(52,201,138,.18); }
+    .mod-amber  { --line-c: var(--amber); --icon-bg: rgba(240,160,48,.08); --icon-border: rgba(240,160,48,.18); }
+
+    /* ── STATS ── */
+    .stats {
+      display: flex; gap: 0;
+      border: 1px solid var(--ink-3);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 48px;
+    }
+    .stat {
+      flex: 1; padding: 20px 24px;
+      border-right: 1px solid var(--ink-3);
+      min-width: 0;
+    }
+    .stat:last-child { border-right: none; }
+    .stat-n {
+      font-family: var(--mono);
+      font-size: 26px; font-weight: 500;
+      color: var(--white); letter-spacing: -.04em;
+      line-height: 1; margin-bottom: 5px;
+    }
+    .stat-l {
+      font-size: 12px; color: var(--mist-6);
+    }
+    @media (max-width: 580px) {
+      .stats { flex-direction: column; }
+      .stat { border-right: none; border-bottom: 1px solid var(--ink-3); }
+      .stat:last-child { border-bottom: none; }
+    }
+  </style>
+  <script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <nav class="nav">
+    <a class="nav-brand" href="index.html"><span class="dot"></span>Xav</a>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link active" href="index.html">Start</a>
+      <a class="nav-link" href="quizzes/index.html">Quizy</a>
+      <a class="nav-link" href="files/index.html">Pliki</a>
+      <a class="nav-link" href="notes/index.html">Notatki</a>
+    </div>
+    <div class="nav-end">
+      <button class="icon-btn" id="themeBtn" title="Motyw">◐</button>
+      <button class="ham-btn" id="hamBtn">☰</button>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- Hero -->
+    <section class="hero a-in">
+      <div class="hero-eyebrow">Rozkład jest znany.</div>
+      <h1>Dlaczego Tede?<br>kurwą<br>jest<em>?</em></h1>
+      <p class="hero-sub">Autorem strony jest Xav.</p>
+      <div class="hero-actions">
+        <a href="quizzes/index.html" class="btn btn-primary">Zacznij quiz</a>
+        <a href="notes/index.html"   class="btn btn-secondary">Przeglądaj notatki</a>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <div class="stats a-in d1" id="statsRow">
+      <div class="stat">
+        <div class="stat-n">2</div>
+        <div class="stat-l">Semestry</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="sFiles">—</div>
+        <div class="stat-l">Pliki do pobrania</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="sQuiz">—</div>
+        <div class="stat-l">Quizy</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="sNotes">—</div>
+        <div class="stat-l">Zestawy notatek</div>
+      </div>
+    </div>
+
+    <!-- Modules -->
+    <div class="s-label a-in d2">Moduły</div>
+    <div class="module-grid a-in d2">
+
+      <a href="quizzes/index.html" class="mod mod-blue">
+        <div class="mod-icon">🧠</div>
+        <div>
+          <div class="mod-title">Quizy</div>
+          <div class="mod-desc">Pytania z losowaniem, licznik wyników, wyjaśnienia odpowiedzi.</div>
+        </div>
+        <div class="mod-footer">
+          <div class="mod-tags">
+            <span class="mod-tag">Sem. 1</span>
+            <span class="mod-tag">Sem. 2</span>
+          </div>
+          <span class="mod-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="files/index.html" class="mod mod-green">
+        <div class="mod-icon">📁</div>
+        <div>
+          <div class="mod-title">Pliki z zajęć</div>
+          <div class="mod-desc">Pliki źródłowe Java i R, posegregowane według przedmiotu.</div>
+        </div>
+        <div class="mod-footer">
+          <div class="mod-tags">
+            <span class="mod-tag">Java</span>
+            <span class="mod-tag">R</span>
+          </div>
+          <span class="mod-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="notes/index.html" class="mod mod-amber">
+        <div class="mod-icon">📝</div>
+        <div>
+          <div class="mod-title">Notatki</div>
+          <div class="mod-desc">Przeglądarka Markdown z Obsidian. Wyszukiwanie, TOC, podświetlanie kodu.</div>
+        </div>
+        <div class="mod-footer">
+          <div class="mod-tags">
+            <span class="mod-tag">Obsidian</span>
+            <span class="mod-tag">Wyszukiwarka</span>
+          </div>
+          <span class="mod-arrow">→</span>
+        </div>
+      </a>
+
+      <div class="mod mod-coming">
+        <div class="mod-icon" style="--icon-bg:var(--ink-2);--icon-border:var(--ink-3)">📊</div>
+        <div>
+          <div class="mod-title" style="color:var(--mist-5)">Statystyki</div>
+          <div class="mod-desc">Śledzenie postępów w nauce. Wkrótce.</div>
+        </div>
+        <div class="mod-footer">
+          <span class="badge badge-muted">Wkrótce</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /wrap -->
+
+  <footer class="site-footer" style="margin-top: 60px;"><span>Xav</span></footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/shared.js"></script>
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    if (window.SH) {
+      const allFiles  = Object.values(SH.files).flatMap(s => [...(s.java||[]), ...(s.r||[])]);
+      const allQuiz   = Object.values(SH.quizzes).flat();
+      document.getElementById('sFiles').textContent  = allFiles.length  || '0';
+      document.getElementById('sQuiz').textContent   = allQuiz.length   || '0';
+      document.getElementById('sNotes').textContent  = (SH.notes||[]).length || '0';
+    }
+  </script>
+</body>
+</html>

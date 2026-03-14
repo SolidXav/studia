@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notatki — Xav</title>
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    /* Kluczowe: body ma stały viewport, scrolluje tylko v-main */
+    html, body { height: 100%; overflow: hidden; margin: 0; }
+    body { display: flex; flex-direction: column; }
+
+    .viewer { display: flex; flex: 1; min-height: 0; }
+
+    /* SIDEBAR */
+    .v-side {
+      width: 248px; flex-shrink: 0;
+      background: var(--ink-0); border-right: 1px solid var(--ink-3);
+      display: flex; flex-direction: column;
+      transition: transform var(--t);
+    }
+    .vs-search { padding: 11px 12px; border-bottom: 1px solid var(--ink-3); position: relative; flex-shrink: 0; }
+    .vs-search input {
+      width: 100%; background: var(--ink-2); border: 1px solid var(--ink-3);
+      border-radius: var(--radius-sm); padding: 7px 10px 7px 30px;
+      font-family: var(--mono); font-size: 12px; color: var(--mist-4); outline: none;
+      transition: border-color var(--t);
+    }
+    .vs-search input:focus { border-color: var(--blue); background: var(--ink-1); }
+    .vs-search input::placeholder { color: var(--ink-4); }
+    .vs-si { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--ink-4); pointer-events: none; }
+    .vs-toc-head { padding: 10px 14px 5px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--ink-4); flex-shrink: 0; }
+    .vs-toc { flex: 1; overflow-y: auto; padding: 0 7px 16px; }
+    .vs-toc::-webkit-scrollbar { width: 3px; }
+    .vs-toc::-webkit-scrollbar-thumb { background: var(--ink-3); }
+    .t-item { display: block; padding: 5px 9px; border-radius: 5px; font-size: 12.5px; color: var(--mist-6); text-decoration: none; cursor: pointer; transition: all var(--t); border-left: 2px solid transparent; line-height: 1.4; }
+    .t-item:hover { color: var(--mist-4); background: var(--ink-2); }
+    .t-item.on { color: var(--white); border-left-color: var(--blue); background: var(--ink-2); }
+    .t-item.l1 { font-weight: 500; font-size: 13px; padding-left: 9px; }
+    .t-item.l2 { padding-left: 19px; }
+    .t-item.l3 { padding-left: 31px; color: var(--ink-4); font-size: 11.5px; }
+    .vs-foot { padding: 9px 14px; border-top: 1px solid var(--ink-3); display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--ink-4); flex-shrink: 0; }
+    .match-ct { background: var(--blue-dim); color: var(--blue); padding: 2px 7px; border-radius: 3px; font-size: 10px; }
+
+    /* MAIN — scrolluje się tutaj */
+    .v-main { flex: 1; overflow-y: auto; min-width: 0; min-height: 0; }
+    .v-main::-webkit-scrollbar { width: 5px; }
+    .v-main::-webkit-scrollbar-thumb { background: var(--ink-3); }
+
+    .v-topbar {
+      position: sticky; top: 0; z-index: 10; height: 44px;
+      background: var(--ink-0); border-bottom: 1px solid var(--ink-3);
+      display: flex; align-items: center; padding: 0 22px; gap: 10px;
+    }
+    .vt-toggle { background: none; border: none; color: var(--mist-6); font-size: 18px; cursor: pointer; padding: 2px 5px; border-radius: 4px; transition: all var(--t); }
+    .vt-toggle:hover { color: var(--mist-4); background: var(--ink-2); }
+    .vt-file { font-family: var(--mono); font-size: 12px; color: var(--mist-6); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vt-back { font-size: 12.5px; color: var(--mist-6); text-decoration: none; white-space: nowrap; transition: color var(--t); }
+    .vt-back:hover { color: var(--mist-4); }
+
+    /* MARKDOWN */
+    .md { max-width: 800px; margin: 0 auto; padding: 36px 40px 80px; line-height: 1.75; }
+    @media(max-width:700px) { .md { padding: 22px 18px 60px; } }
+
+    .md h1 { font-size: 24px; font-weight: 600; color: var(--white); margin: 44px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--ink-3); letter-spacing: -.03em; scroll-margin-top: 104px; }
+    .md h1:first-child { margin-top: 0; }
+    .md h2 { font-size: 17px; font-weight: 600; color: var(--mist-4); margin: 32px 0 12px; padding: 6px 13px; background: var(--ink-2); border-left: 2px solid var(--blue); border-radius: 0 4px 4px 0; scroll-margin-top: 104px; }
+    .md h3 { font-size: 14.5px; font-weight: 500; color: var(--mist-4); margin: 24px 0 8px; font-family: var(--mono); scroll-margin-top: 104px; }
+    .md h4 { font-size: 13px; font-weight: 500; color: var(--mist-6); margin: 16px 0 6px; font-family: var(--mono); scroll-margin-top: 104px; }
+    .md p { margin-bottom: 12px; font-size: 14.5px; }
+    .md strong { color: var(--white); font-weight: 600; }
+    .md em { color: var(--mist-6); font-style: italic; }
+    .md :not(pre) > code { font-family: var(--mono); font-size: 12.5px; background: var(--ink-2); color: var(--blue); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--ink-3); }
+    .md pre { background: var(--ink-1) !important; border: 1px solid var(--ink-3); border-radius: var(--radius); margin: 12px 0; overflow: hidden; position: relative; }
+    .md pre::after { content: attr(data-lang); position: absolute; top: 8px; right: 42px; font-family: var(--mono); font-size: 10px; color: var(--ink-4); letter-spacing: .08em; text-transform: uppercase; }
+    .md pre code { display: block; padding: 15px 16px; font-family: var(--mono) !important; font-size: 12.5px !important; line-height: 1.65; overflow-x: auto; background: none !important; border: none !important; }
+    .md pre code::-webkit-scrollbar { height: 3px; }
+    .md pre code::-webkit-scrollbar-thumb { background: var(--ink-3); }
+    .copy-btn { position: absolute; top: 6px; right: 8px; background: var(--ink-2); border: 1px solid var(--ink-3); color: var(--ink-4); font-family: var(--mono); font-size: 10px; padding: 3px 7px; border-radius: 3px; cursor: pointer; transition: all var(--t); opacity: 0; }
+    .md pre:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { color: var(--mist-4); }
+    .copy-btn.ok { color: var(--green); border-color: var(--green); }
+    .md ul, .md ol { padding-left: 22px; margin-bottom: 12px; }
+    .md li { margin-bottom: 4px; font-size: 14.5px; }
+    .md ul li::marker { color: var(--blue); }
+    .md ol li::marker { color: var(--blue); font-family: var(--mono); font-size: 12px; }
+    .md table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; display: block; overflow-x: auto; }
+    .md th { background: var(--ink-2); color: var(--mist-4); font-weight: 500; padding: 8px 12px; text-align: left; border: 1px solid var(--ink-3); white-space: nowrap; }
+    .md td { padding: 7px 12px; border: 1px solid var(--ink-3); vertical-align: top; }
+    .md tr:nth-child(even) td { background: var(--ink-1); }
+    .md hr { border: none; border-top: 1px solid var(--ink-3); margin: 26px 0; }
+    .md a { color: var(--blue); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color var(--t); }
+    .md a:hover { border-bottom-color: var(--blue); }
+    .md blockquote { border-left: 2px solid var(--ink-4); padding: 8px 14px; margin: 12px 0; color: var(--mist-6); }
+
+    /* CALLOUT BOXY */
+    .callout { border-radius: var(--radius); margin: 14px 0; overflow: hidden; border: 1px solid var(--c-bdr, var(--ink-3)); }
+    .callout-head { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--c-bg, var(--ink-2)); font-size: 13px; font-weight: 600; color: var(--c-clr, var(--mist-4)); }
+    .callout-body { padding: 12px 14px 14px; font-size: 14px; background: var(--c-body, var(--ink-1)); border-top: 1px solid var(--c-bdr, var(--ink-3)); }
+    .callout-body > *:first-child { margin-top: 0; }
+    .callout-body > *:last-child { margin-bottom: 0; }
+    .callout-body p { margin-bottom: 8px; font-size: 14px; }
+    .callout-body pre { margin: 8px 0; }
+    .callout-body ul, .callout-body ol { margin-bottom: 8px; }
+
+    .callout[data-t="info"]    { --c-bdr: rgba(79,142,247,.3);  --c-bg: rgba(79,142,247,.08);  --c-body: rgba(79,142,247,.03);  --c-clr: var(--blue); }
+    .callout[data-t="note"]    { --c-bdr: rgba(79,142,247,.3);  --c-bg: rgba(79,142,247,.08);  --c-body: rgba(79,142,247,.03);  --c-clr: var(--blue); }
+    .callout[data-t="tip"]     { --c-bdr: rgba(52,201,138,.3);  --c-bg: rgba(52,201,138,.08);  --c-body: rgba(52,201,138,.03);  --c-clr: var(--green); }
+    .callout[data-t="warning"] { --c-bdr: rgba(240,160,48,.3);  --c-bg: rgba(240,160,48,.08);  --c-body: rgba(240,160,48,.03);  --c-clr: var(--amber); }
+    .callout[data-t="danger"]  { --c-bdr: rgba(240,82,82,.3);   --c-bg: rgba(240,82,82,.08);   --c-body: rgba(240,82,82,.03);   --c-clr: var(--red); }
+    .callout[data-t="error"]   { --c-bdr: rgba(240,82,82,.3);   --c-bg: rgba(240,82,82,.08);   --c-body: rgba(240,82,82,.03);   --c-clr: var(--red); }
+
+    /* Wyszukiwanie */
+    mark.hl { background: rgba(79,142,247,.22); color: var(--blue); border-radius: 2px; padding: 0 1px; }
+
+    /* Back to top */
+    .btt { position: fixed; bottom: 20px; right: 20px; width: 34px; height: 34px; background: var(--ink-2); border: 1px solid var(--ink-3); color: var(--mist-6); font-size: 15px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; transition: all var(--t); }
+    .btt:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .btt.h { opacity: 0; pointer-events: none; }
+
+    @media(max-width:900px) {
+      .v-side { position: fixed; top: var(--nav-h); left: 0; bottom: 0; z-index: 50; transform: translateX(-100%); height: calc(100vh - var(--nav-h)); }
+      .v-side.open { transform: none; box-shadow: 4px 0 40px rgba(0,0,0,.5); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="nav-brand" href="../index.html"><span class="dot"></span>Xav</a>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link" href="../index.html">Start</a>
+      <a class="nav-link" href="../quizzes/index.html">Quizy</a>
+      <a class="nav-link" href="../files/index.html">Pliki</a>
+      <a class="nav-link active" href="index.html">Notatki</a>
+    </div>
+    <div class="nav-end">
+      <button class="icon-btn" id="themeBtn">◐</button>
+      <button class="ham-btn" id="hamBtn">☰</button>
+    </div>
+  </nav>
+
+  <div class="viewer">
+    <aside class="v-side" id="vSide">
+      <div class="vs-search">
+        <span class="vs-si">⌕</span>
+        <input id="srch" type="text" placeholder="Szukaj... (Ctrl+K)" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="vs-toc-head">SEKCJE</div>
+      <nav class="vs-toc" id="toc"></nav>
+      <div class="vs-foot">
+        <span id="secCt">—</span>
+        <span class="match-ct" id="matchCt" style="display:none"></span>
+      </div>
+    </aside>
+
+    <div class="v-main" id="vMain">
+      <div class="v-topbar">
+        <button class="vt-toggle" id="sideToggle">☰</button>
+        <span class="vt-file" id="vtFile"></span>
+        <a class="vt-back" href="index.html">← Notatki</a>
+      </div>
+      <article class="md" id="md"></article>
+    </div>
+  </div>
+
+  <button class="btt h" id="btt">↑</button>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/shared.js"></script>
+  <script>
+  (function(){
+    'use strict';
+
+    marked.setOptions({ gfm: true, breaks: false });
+
+    // ─── CALLOUT PARSER (linia po linii) ──────────────────────────────────────
+    const CALLOUT_ICONS = {
+      info:'ℹ️', note:'📌', tip:'💡', warning:'⚠️',
+      danger:'🔴', error:'🔴', important:'❗', example:'📋',
+      quote:'💬', success:'✅', question:'❓'
+    };
+
+    function preprocessObsidian(src) {
+      // 1. YAML frontmatter
+      src = src.replace(/^---[\s\S]*?---[ \t]*\r?\n/, '');
+
+      // 2. Wikilinki
+      src = src.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, l, a) => a || l);
+
+      // 3. Highlights ==tekst==
+      src = src.replace(/==([^=\n]+)==/g,
+        '<mark style="background:rgba(240,160,48,.18);color:var(--amber);border-radius:2px;padding:0 2px">$1</mark>');
+
+      // 4. Callout boxy — linia po linii
+      // Callout zaczyna się: >[!type] tytuł
+      // Kolejne linie callout to linie zaczynające się od ">"
+      // Linia BEZ ">" kończy blok callout
+      const lines = src.split('\n');
+      const out = [];
+      let i = 0;
+
+      while (i < lines.length) {
+        const m = lines[i].match(/^>[ \t]*\[!(\w+)\][ \t]*(.*)/);
+
+        if (m) {
+          const type  = m[1].toLowerCase();
+          const title = m[2].trim();
+          const icon  = CALLOUT_ICONS[type] || '📌';
+          const label = title || (type.charAt(0).toUpperCase() + type.slice(1));
+
+          // Zbierz body: wszystkie kolejne linie zaczynające się od ">"
+          const bodyLines = [];
+          i++;
+          // Wciągaj linie do callout jeśli:
+          // - zaczynają się od ">"
+          // - są puste/bez ">", ale NASTĘPNA linia zaczyna się od ">" (Obsidian "orphan" lines)
+          while (i < lines.length) {
+            const cur  = lines[i];
+            const next = lines[i + 1];
+            if (cur.startsWith('>') || cur.startsWith('> ')) {
+              bodyLines.push(cur.replace(/^>[ \t]?/, ''));
+              i++;
+            } else if (cur.trim() !== '' && next !== undefined && (next.startsWith('>') || next.startsWith('> '))) {
+              // Linia bez ">" ale następna ma ">" — wciągamy do callout (Obsidian quirk)
+              bodyLines.push(cur);
+              i++;
+            } else {
+              break;
+            }
+          }
+
+          // Usuń puste linie na początku i końcu body
+          while (bodyLines.length && !bodyLines[0].trim()) bodyLines.shift();
+          while (bodyLines.length && !bodyLines[bodyLines.length - 1].trim()) bodyLines.pop();
+
+          const bodyHtml = marked.parse(bodyLines.join('\n'));
+
+          out.push(
+            `<div class="callout" data-t="${type}">` +
+            `<div class="callout-head">${icon}&nbsp;${label}</div>` +
+            `<div class="callout-body">${bodyHtml}</div>` +
+            `</div>`
+          );
+        } else {
+          out.push(lines[i]);
+          i++;
+        }
+      }
+
+      return out.join('\n');
+    }
+
+    // ─── DOM ──────────────────────────────────────────────────────────────────
+    const mdEl    = document.getElementById('md');
+    const tocEl   = document.getElementById('toc');
+    const vMain   = document.getElementById('vMain');
+    const vSide   = document.getElementById('vSide');
+    const vtFile  = document.getElementById('vtFile');
+    const srch    = document.getElementById('srch');
+    const secCt   = document.getElementById('secCt');
+    const matchCt = document.getElementById('matchCt');
+    const btt     = document.getElementById('btt');
+
+    // ─── RENDER ───────────────────────────────────────────────────────────────
+    function render(rawText, title) {
+      mdEl.innerHTML = marked.parse(preprocessObsidian(rawText));
+      postProcess();
+      buildTOC();
+      vtFile.textContent = title || 'Notatki';
+      vMain.scrollTo(0, 0);
+      observeHeadings();
+    }
+
+    function postProcess() {
+      mdEl.querySelectorAll('pre code').forEach(block => {
+        const cls  = [...block.classList].find(c => c.startsWith('language-'));
+        const lang = cls ? cls.replace('language-', '') : 'java';
+        if (!cls) block.classList.add('language-java');
+        block.closest('pre').setAttribute('data-lang', lang);
+        hljs.highlightElement(block);
+      });
+
+      mdEl.querySelectorAll('pre').forEach(pre => {
+        if (pre.querySelector('.copy-btn')) return;
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.textContent = 'copy';
+        btn.addEventListener('click', () => {
+          navigator.clipboard.writeText(pre.querySelector('code')?.innerText || '').then(() => {
+            btn.textContent = '✓'; btn.classList.add('ok');
+            setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('ok'); }, 2000);
+          });
+        });
+        pre.appendChild(btn);
+      });
+
+      // Heading IDs z obsługą polskich znaków
+      const used = {};
+      mdEl.querySelectorAll('h1,h2,h3,h4').forEach(h => {
+        const txt = h.textContent.trim();
+        let id = txt.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/\u0142/g,'l')
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'sec';
+        const key = id;
+        if (used[key] !== undefined) { used[key]++; id += '-' + used[key]; } else used[key] = 0;
+        h.id = id;
+      });
+    }
+
+    // ─── TOC ──────────────────────────────────────────────────────────────────
+    function buildTOC() {
+      tocEl.innerHTML = '';
+      let count = 0;
+      mdEl.querySelectorAll('h1,h2,h3').forEach(h => {
+        const lv = parseInt(h.tagName[1]);
+        const a  = document.createElement('a');
+        a.className = `t-item l${lv}`;
+        a.textContent = h.textContent.trim();
+        a.href = '#' + h.id;
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (window.innerWidth <= 900) vSide.classList.remove('open');
+        });
+        tocEl.appendChild(a);
+        if (lv <= 2) count++;
+      });
+      secCt.textContent = count + ' sekcj' + (count === 1 ? 'a' : count < 5 ? 'e' : 'i');
+    }
+
+    let ioObs;
+    function observeHeadings() {
+      if (ioObs) ioObs.disconnect();
+      ioObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (!e.isIntersecting) return;
+          tocEl.querySelectorAll('.t-item').forEach(a =>
+            a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+        });
+      }, { root: vMain, rootMargin: '-104px 0px -70% 0px' });
+      mdEl.querySelectorAll('h1,h2,h3').forEach(h => ioObs.observe(h));
+    }
+
+    // ─── WYSZUKIWANIE ─────────────────────────────────────────────────────────
+    let savedHTML = '', searchOn = false, srchTimer;
+
+    srch.addEventListener('input', () => {
+      clearTimeout(srchTimer);
+      srchTimer = setTimeout(() => doSearch(srch.value.trim()), 250);
+    });
+
+    function doSearch(q) {
+      if (searchOn) {
+        mdEl.innerHTML = savedHTML;
+        postProcess();
+        observeHeadings();
+        searchOn = false;
+      }
+      matchCt.style.display = 'none';
+      if (!q || q.length < 2) return;
+
+      savedHTML = mdEl.innerHTML;
+      searchOn  = true;
+
+      const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re  = new RegExp(`(${esc})`, 'gi');
+      let   cnt = 0;
+
+      const walker = document.createTreeWalker(mdEl, NodeFilter.SHOW_TEXT, {
+        acceptNode(n) {
+          const p = n.parentElement;
+          if (!p) return NodeFilter.FILTER_REJECT;
+          if (['SCRIPT','STYLE','BUTTON'].includes(p.tagName)) return NodeFilter.FILTER_REJECT;
+          if (p.closest('pre') || p.closest('.copy-btn')) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(node => {
+        if (!re.test(node.textContent)) return;
+        const frag = document.createDocumentFragment();
+        node.textContent.split(re).forEach((part, i) => {
+          if (i % 2 === 1) {
+            const m = document.createElement('mark');
+            m.className = 'hl'; m.textContent = part; cnt++;
+            frag.appendChild(m);
+          } else if (part) {
+            frag.appendChild(document.createTextNode(part));
+          }
+        });
+        node.replaceWith(frag);
+      });
+
+      matchCt.textContent = cnt ? cnt + ' wyników' : 'brak';
+      matchCt.style.display = 'inline';
+      if (cnt) mdEl.querySelector('mark.hl')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ─── SIDEBAR ──────────────────────────────────────────────────────────────
+    document.getElementById('sideToggle').addEventListener('click', () =>
+      vSide.classList.toggle('open'));
+    document.addEventListener('click', e => {
+      if (window.innerWidth <= 900 && !vSide.contains(e.target) && e.target.id !== 'sideToggle')
+        vSide.classList.remove('open');
+    });
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); srch.focus(); srch.select(); }
+      if (e.key === 'Escape') { srch.value = ''; doSearch(''); srch.blur(); }
+    });
+
+    // ─── BACK TO TOP ──────────────────────────────────────────────────────────
+    vMain.addEventListener('scroll', () => btt.classList.toggle('h', vMain.scrollTop < 300), { passive: true });
+    btt.addEventListener('click', () => vMain.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // ─── ŁADOWANIE ────────────────────────────────────────────────────────────
+    const noteId = new URLSearchParams(location.search).get('id');
+
+    function loadScript(id) {
+      return new Promise((resolve, reject) => {
+        window.NOTE_DATA = null;
+        const s = document.createElement('script');
+        s.src = `data-${id}.js`;
+        s.onload = () => window.NOTE_DATA ? resolve(window.NOTE_DATA) : reject();
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    if (noteId) {
+      loadScript(noteId)
+        .then(d => render(d.content, d.title || noteId))
+        .catch(() => {
+          mdEl.innerHTML = `<p style="color:var(--mist-6);padding:40px 36px;font-size:14px;line-height:2">
+            Nie znaleziono notatki <code style="font-family:var(--mono);color:var(--blue)">${noteId}</code>.<br>
+            Upewnij się że plik <code style="font-family:var(--mono);color:var(--blue)">notes/data-${noteId}.js</code> istnieje.<br><br>
+            <a href="index.html" style="color:var(--blue)">← Wróć do notatek</a></p>`;
+        });
+    } else {
+      try {
+        const s = localStorage.getItem('sh-md');
+        const t = localStorage.getItem('sh-title');
+        if (s) render(s, t || 'Notatki');
+        else mdEl.innerHTML = `<p style="color:var(--mist-6);padding:40px 36px;font-size:14px">
+          Brak notatki. <a href="index.html" style="color:var(--blue)">← Wróć do listy</a></p>`;
+      } catch(_) {}
+    }
+
+  })();
+  </script>
+</body>
+</html>

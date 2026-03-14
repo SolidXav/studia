@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pliki — Xav</title>
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <style>
+    .subject-block { margin-bottom: 28px; }
+    .subject-head {
+      display: flex; align-items: center; gap: 10px;
+      padding-bottom: 10px; margin-bottom: 12px;
+      border-bottom: 1px solid var(--ink-3);
+    }
+    .subj-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .subj-dot.java { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .subj-dot.r    { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .subj-dot.other{ background: var(--mist-6); }
+    .subj-name { font-size: 13px; font-weight: 500; color: var(--mist-5); }
+    .subj-cnt  { font-family: var(--mono); font-size: 11px; color: var(--mist-6); margin-left: auto; }
+
+    .file-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 16px;
+      border: 1px solid var(--ink-3);
+      border-radius: var(--radius);
+      background: var(--ink-1);
+      margin-bottom: 6px;
+      transition: border-color var(--t), background var(--t);
+    }
+    .file-row:hover { border-color: var(--ink-4); background: var(--ink-2); }
+
+    .file-type {
+      font-family: var(--mono); font-size: 10px; font-weight: 500;
+      padding: 3px 7px; border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .file-type.java { background: rgba(240,160,48,.10); color: var(--amber); }
+    .file-type.r    { background: rgba(52,201,138,.10);  color: var(--green); }
+    .file-type.other{ background: var(--ink-2); color: var(--mist-6); }
+
+    .file-name {
+      font-family: var(--mono); font-size: 13px;
+      color: var(--mist-4); flex: 1; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-size { font-family: var(--mono); font-size: 11px; color: var(--mist-6); flex-shrink: 0; }
+
+    .dl-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px;
+      background: none; border: 1px solid var(--ink-3);
+      border-radius: var(--radius-sm);
+      font-family: var(--mono); font-size: 11px;
+      color: var(--mist-6); text-decoration: none;
+      transition: all var(--t); flex-shrink: 0;
+    }
+    .dl-btn:hover { border-color: var(--green); color: var(--green); background: rgba(52,201,138,.06); }
+
+    .add-hint {
+      margin-top: 28px; padding: 16px 20px;
+      border: 1px solid var(--ink-3); border-radius: var(--radius);
+      font-family: var(--mono); font-size: 12px; color: var(--mist-6); line-height: 1.7;
+    }
+    .add-hint strong { color: var(--mist-5); font-weight: 500; }
+    .add-hint code { background: var(--ink-2); padding: 1px 6px; border-radius: 4px; color: var(--blue); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="nav-brand" href="../index.html"><span class="dot"></span>Xav</a>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link" href="../index.html">Start</a>
+      <a class="nav-link" href="../quizzes/index.html">Quizy</a>
+      <a class="nav-link active" href="index.html">Pliki</a>
+      <a class="nav-link" href="../notes/index.html">Notatki</a>
+    </div>
+    <div class="nav-end">
+      <button class="icon-btn" id="themeBtn">◐</button>
+      <button class="ham-btn" id="hamBtn">☰</button>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <div class="page-top a-in">
+      <div class="crumb"><a href="../index.html">Xav</a><span>/</span>Pliki</div>
+      <h1>Pliki z zajęć</h1>
+      <p>Pliki źródłowe do pobrania, posegregowane według przedmiotu.</p>
+
+    </div>
+
+    <div class="a-in d1">
+      <div class="tabs" id="tabBar"></div>
+      <div id="panels"></div>
+      <div class="mb-10"> </div>
+    </div>
+  </div>
+
+  <footer class="site-footer" style="margin-top: 60px;"><span>Xav – Pliki</span><a href="../index.html">↵ Start</a></footer>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/shared.js"></script>
+  <script>
+  const { semesters, files } = window.SH;
+  const tabBar = document.getElementById('tabBar');
+  const panels = document.getElementById('panels');
+
+  const catMeta = {
+    java:  { label: 'Java',  dot: 'java',  type: 'java'  },
+    r:     { label: 'R',     dot: 'r',     type: 'r'     },
+    other: { label: 'Inne',  dot: 'other', type: 'other' },
+  };
+
+  semesters.forEach((s, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'tab'+(i===0?' active':'');
+    tab.textContent = s.label;
+    tab.onclick = () => {
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('fp-'+s.id).classList.add('active');
+    };
+    tabBar.appendChild(tab);
+
+    const panel = document.createElement('div');
+    panel.id = 'fp-'+s.id;
+    panel.className = 'tab-panel'+(i===0?' active':'');
+
+    const semFiles = files[s.id] || {};
+    let hasAny = false;
+
+    Object.entries(catMeta).forEach(([cat, meta]) => {
+      const list = semFiles[cat] || [];
+      if (!list.length) return;
+      hasAny = true;
+
+      const block = document.createElement('div');
+      block.className = 'subject-block';
+      block.innerHTML = `
+        <div class="subject-head">
+          <span class="subj-dot ${meta.dot}"></span>
+          <span class="subj-name">${meta.label}</span>
+          <span class="subj-cnt">${list.length} plik${list.length===1?'':'ów'}</span>
+        </div>`;
+
+      list.forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'file-row';
+        row.innerHTML = `
+          <span class="file-type ${meta.type}">${meta.label.toUpperCase()}</span>
+          <span class="file-name">${f.name}</span>
+          <span class="file-size">${f.size||''}</span>
+          <a class="dl-btn" href="${f.path}" download="${f.name}">↓ pobierz</a>`;
+        block.appendChild(row);
+      });
+      panel.appendChild(block);
+    });
+
+    if (!hasAny) {
+      panel.innerHTML = `<div class="empty"><div class="e-icon">📭</div><h3>Brak plików</h3><p>Pliki dla ${s.label} pojawią się tutaj po dodaniu.</p></div>`;
+    }
+    panels.appendChild(panel);
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz — StudyHub</title>
+  <link rel="stylesheet" href="../../assets/css/base.css" />
+  <style>
+    .quiz-shell { max-width: 680px; margin: 0 auto; padding: 0 32px 80px; }
+    @media (max-width:600px) { .quiz-shell { padding: 0 20px 60px; } }
+
+    /* progress */
+    .prog-track {
+      height: 2px; background: var(--ink-3);
+      border-radius: 2px; margin-bottom: 36px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; background: var(--blue);
+      border-radius: 2px; transition: width .5s var(--ease);
+    }
+
+    /* meta bar */
+    .q-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+    }
+    .q-count { font-family: var(--mono); font-size: 12px; color: var(--mist-6); }
+    .q-score { font-family: var(--mono); font-size: 12px; color: var(--green); }
+
+    /* question */
+    .q-box {
+      background: var(--ink-1);
+      border: 1px solid var(--ink-3);
+      border-radius: var(--radius-lg);
+      padding: 28px 28px 24px;
+      margin-bottom: 14px;
+    }
+    .q-text {
+      font-size: 17px; font-weight: 500;
+      color: var(--white); line-height: 1.5;
+      margin-bottom: 20px; letter-spacing: -.01em;
+    }
+    .q-code {
+      font-family: var(--mono); font-size: 13px;
+      background: var(--ink-0); border: 1px solid var(--ink-3);
+      border-radius: var(--radius-sm); padding: 14px 16px;
+      margin-bottom: 20px; overflow-x: auto; line-height: 1.6;
+      color: var(--mist-4);
+    }
+
+    /* options */
+    .opts { display: flex; flex-direction: column; gap: 8px; }
+    .opt {
+      display: flex; align-items: center; gap: 13px;
+      padding: 13px 16px;
+      background: var(--ink-0);
+      border: 1px solid var(--ink-3);
+      border-radius: var(--radius);
+      cursor: pointer; font-size: 14px;
+      color: var(--mist-4);
+      transition: border-color var(--t), background var(--t), color var(--t);
+      user-select: none;
+    }
+    .opt:hover:not(.locked) { border-color: var(--ink-4); background: var(--ink-2); color: var(--white); }
+    .opt.selected { border-color: var(--blue); background: var(--blue-dim); color: var(--white); }
+    .opt.correct   { border-color: var(--green); background: rgba(52,201,138,.09); color: var(--white); }
+    .opt.wrong     { border-color: var(--red);   background: rgba(240,82,82,.09);  color: var(--white); }
+
+    .opt-letter {
+      width: 26px; height: 26px; flex-shrink: 0;
+      background: var(--ink-2); border: 1px solid var(--ink-3);
+      border-radius: 6px;
+      font-family: var(--mono); font-size: 11px; font-weight: 500;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--mist-6);
+      transition: all var(--t);
+    }
+    .opt.selected .opt-letter { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .opt.correct   .opt-letter { background: var(--green); border-color: var(--green); color: #fff; }
+    .opt.wrong     .opt-letter { background: var(--red);   border-color: var(--red);   color: #fff; }
+
+    /* explanation */
+    .explain {
+      padding: 12px 16px;
+      background: var(--ink-2); border-left: 2px solid var(--blue);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 13px; color: var(--mist-5); line-height: 1.6;
+      margin-top: 14px;
+      display: none;
+    }
+    .explain.show { display: block; animation: fadeUp .25s var(--ease); }
+
+    /* actions */
+    .q-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 16px; }
+    .skip-btn { font-family: var(--mono); font-size: 12px; color: var(--mist-6); background: none; border: none; cursor: pointer; padding: 4px; transition: color var(--t); }
+    .skip-btn:hover { color: var(--mist-5); }
+
+    /* results */
+    .results {
+      background: var(--ink-1); border: 1px solid var(--ink-3);
+      border-radius: var(--radius-lg); padding: 48px 28px;
+      text-align: center; display: none;
+    }
+    .results.show { display: block; animation: fadeUp .4s var(--ease); }
+    .res-pct {
+      font-family: var(--mono); font-size: 56px; font-weight: 500;
+      color: var(--white); letter-spacing: -.04em;
+      line-height: 1; margin: 16px 0 8px;
+    }
+    .res-sub { font-size: 14px; color: var(--mist-6); margin-bottom: 32px; }
+    .res-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="nav-brand" href="../../index.html"><span class="dot"></span>StudyHub</a>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link" href="../../index.html">Start</a>
+      <a class="nav-link active" href="../index.html">Quizy</a>
+      <a class="nav-link" href="../../files/index.html">Pliki</a>
+      <a class="nav-link" href="../../notes/index.html">Notatki</a>
+    </div>
+    <div class="nav-end">
+      <button class="icon-btn" id="themeBtn">◐</button>
+      <button class="ham-btn" id="hamBtn">☰</button>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <div class="page-top a-in" style="padding-bottom:28px">
+      <div class="crumb"><a href="../../index.html">StudyHub</a><span>/</span><a href="../index.html">Quizy</a><span>/</span><span id="bcTitle">Quiz</span></div>
+      <h1 id="pageTitle">Quiz</h1>
+    </div>
+  </div>
+
+  <div class="quiz-shell a-in d1">
+    <div class="prog-track"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+
+    <div class="q-meta">
+      <span class="q-count" id="qCount">Pytanie 1 z ?</span>
+      <span class="q-score" id="qScoreEl"></span>
+    </div>
+
+    <div class="q-box" id="qBox">
+      <div class="q-text" id="qText"></div>
+      <pre class="q-code" id="qCode" style="display:none"></pre>
+      <div class="opts" id="opts"></div>
+      <div class="explain" id="explain"></div>
+    </div>
+
+    <div class="q-actions" id="qActions">
+      <button class="skip-btn" id="btnSkip">pomiń →</button>
+      <button class="btn btn-primary" id="btnNext" style="display:none">Następne →</button>
+    </div>
+
+    <div class="results" id="results">
+      <div style="font-size:40px">✦</div>
+      <div class="res-pct" id="resPct">0%</div>
+      <div class="res-sub" id="resSub"></div>
+      <div class="res-actions">
+        <button class="btn btn-primary" id="btnRestart">Spróbuj ponownie</button>
+        <a class="btn btn-secondary" href="../index.html">Inne quizy</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/js/config.js"></script>
+  <script src="../../assets/js/shared.js"></script>
+  <script src="questions.js"></script>
+  <script>
+  (function(){
+    const Q = window.QUIZ_DATA;
+    if (!Q) {
+      document.getElementById('qBox').innerHTML =
+        '<p style="color:var(--mist-6);text-align:center;padding:32px;font-size:14px">Brak pytań. Dodaj plik questions.js.</p>';
+      document.getElementById('qActions').style.display='none';
+      return;
+    }
+
+    document.getElementById('bcTitle').textContent = Q.title;
+    document.getElementById('pageTitle').textContent = Q.title;
+
+    const qs = [...Q.questions].sort(()=>Math.random()-.5);
+    let cur=0, score=0, done=false;
+
+    const progEl  = document.getElementById('prog');
+    const qCountEl= document.getElementById('qCount');
+    const qScoreEl= document.getElementById('qScoreEl');
+    const qText   = document.getElementById('qText');
+    const qCode   = document.getElementById('qCode');
+    const optsEl  = document.getElementById('opts');
+    const explain = document.getElementById('explain');
+    const btnNext = document.getElementById('btnNext');
+    const btnSkip = document.getElementById('btnSkip');
+    const resultsEl= document.getElementById('results');
+    const qBox    = document.getElementById('qBox');
+    const qActions= document.getElementById('qActions');
+
+    const LETTERS = 'ABCDE';
+
+    function show(idx) {
+      done = false;
+      btnNext.style.display='none'; btnSkip.style.display='inline';
+      explain.classList.remove('show'); explain.textContent='';
+
+      const q = qs[idx];
+      qCountEl.textContent = `Pytanie ${idx+1} z ${qs.length}`;
+      progEl.style.width = (idx/qs.length*100)+'%';
+      qText.textContent = q.question;
+
+      if (q.code) { qCode.textContent=q.code; qCode.style.display='block'; }
+      else qCode.style.display='none';
+
+      const shuffled = q.options.map((o,i)=>({o,i})).sort(()=>Math.random()-.5);
+      optsEl.innerHTML='';
+      shuffled.forEach(({o,i}, li) => {
+        const d = document.createElement('div');
+        d.className='opt'; d.dataset.i=i;
+        d.innerHTML=`<span class="opt-letter">${LETTERS[li]}</span><span>${o}</span>`;
+        d.addEventListener('click', ()=>pick(d, i, q.answer, q.explanation));
+        optsEl.appendChild(d);
+      });
+    }
+
+    function pick(el, chosen, correct, explanation) {
+      if (done) return; done=true;
+      optsEl.querySelectorAll('.opt').forEach(o=>{
+        o.classList.add('locked');
+        if (+o.dataset.i===correct) o.classList.add('correct');
+        else if (o===el) o.classList.add('wrong');
+      });
+      if (chosen===correct) { score++; qScoreEl.textContent=`✓ ${score}`; }
+      if (explanation) { explain.textContent='💡 '+explanation; explain.classList.add('show'); }
+      btnSkip.style.display='none'; btnNext.style.display='inline-flex';
+    }
+
+    btnNext.addEventListener('click', ()=>{ cur++; cur>=qs.length ? finish() : show(cur); });
+    btnSkip.addEventListener('click', ()=>{ cur++; cur>=qs.length ? finish() : show(cur); });
+
+    function finish() {
+      qBox.style.display='none'; qActions.style.display='none';
+      document.querySelector('.prog-track').style.display='none';
+      document.querySelector('.q-meta').style.display='none';
+      const pct = Math.round(score/qs.length*100);
+      document.getElementById('resPct').textContent=pct+'%';
+      document.getElementById('resSub').textContent=`${score} z ${qs.length} poprawnych`;
+      resultsEl.classList.add('show');
+    }
+
+    document.getElementById('btnRestart').addEventListener('click', ()=>{
+      cur=0; score=0; qScoreEl.textContent='';
+      qs.sort(()=>Math.random()-.5);
+      resultsEl.classList.remove('show');
+      qBox.style.display=''; qActions.style.display='flex';
+      document.querySelector('.prog-track').style.display='block';
+      document.querySelector('.q-meta').style.display='flex';
+      show(0);
+    });
+
+    show(0);
+  })();
+  </script>
+</body>
+</html>

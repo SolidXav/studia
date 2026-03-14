@@ -1,0 +1,57 @@
+---
+title: "SkryptDoc"
+format: html
+editor: visual
+---
+
+### Wczytaj potrzebne pakiety.
+
+```{r}
+library(dplyr)
+```
+
+Wczytaj dane z pliku train.csv
+
+```{r}
+ros <- read.csv("rawdata/train.csv")
+head(ros)
+```
+
+Sprawdz strukture wczytanego zbioru
+
+```{r}
+str(ros)
+```
+
+```{r}
+ncol(ros)
+nrow(ros)
+```
+
+```{r}
+summary(ros)
+```
+
+```{r}
+ros |> sapply(class) |> table()
+table(sapply(ros, class)) ## to samo co wyzej (wyzej w przetwarzaniu potokowym)
+```
+
+## Wyznacz łączną sprzedaż poszczególnych sklepów w roku 2014. Ogranicz zbiór do tych sklepów, które były obserwowane przez cały rok.
+
+```{r}
+ros_sale <- ros |>
+  filter(substr(Date, 1, 4) == "2014") |>
+  summarise(
+    Sales = sum(Sales), 
+    FirstDate = min(Date), 
+    LastDate = max(Date), 
+    .by = Store
+    ) |> 
+  filter(FirstDate=="2014-01-01", LastDate == "2014-12-31") |>
+  select(-FirstDate, -LastDate) |>
+  arrange(Sales)
+
+ros_sale
+
+```
