@@ -89,8 +89,11 @@
     .md pre { background: var(--ink-1) !important; border: 1px solid var(--ink-3); border-radius: var(--radius); margin: 12px 0; overflow: hidden; position: relative; }
     .md pre::after { content: attr(data-lang); position: absolute; top: 8px; right: 42px; font-family: var(--mono); font-size: 10px; color: var(--ink-4); letter-spacing: .08em; text-transform: uppercase; }
     .md pre code { display: block; padding: 15px 16px; font-family: var(--mono) !important; font-size: 12.5px !important; line-height: 1.65; overflow-x: auto; background: none !important; border: none !important; }
-    .md pre code::-webkit-scrollbar { height: 3px; }
-    .md pre code::-webkit-scrollbar-thumb { background: var(--ink-3); }
+    .md pre code::-webkit-scrollbar { height: 10px; }
+    .md pre code::-webkit-scrollbar-track { background: var(--ink-2); border-radius: 5px; }
+    .md pre code::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 5px; }
+    .md pre code::-webkit-scrollbar-thumb:hover { background: var(--mist-6); }
+    .md pre code { scrollbar-width: auto; scrollbar-color: var(--ink-4) var(--ink-2); }
     .copy-btn { position: absolute; top: 6px; right: 8px; background: var(--ink-2); border: 1px solid var(--ink-3); color: var(--ink-4); font-family: var(--mono); font-size: 10px; padding: 3px 7px; border-radius: 3px; cursor: pointer; transition: all var(--t); opacity: 0; }
     .md pre:hover .copy-btn { opacity: 1; }
     .copy-btn:hover { color: var(--mist-4); }
@@ -480,7 +483,8 @@
 
     // ─── ŁADOWANIE ────────────────────────────────────────────────────────────
     const noteId = new URLSearchParams(location.search).get('id');
-    const notes  = (window.SH || {}).notes || [];
+    const notesObj = (window.SH || {}).notes || {};
+    const notes  = Object.values(notesObj).flat();
 
     function loadMarkdown(id) {
       const entry = notes.find(n => n.id === id);
