@@ -48,11 +48,12 @@ window.SH = {
   },
 
   /* ── NOTATKI ───────────────────────────────────────────
-     file: ścieżka do pliku .md w /notes/
+     file: ścieżka relatywna do pliku .md w katalogu notes/
+     Wrzuć plik .md z Obsidiana do katalogu notes/ i zarejestruj tutaj.
   */
-  // Notatki ładowane są przez pliki notes/data-<id>.js
-  // Dodaj plik notes/data-mojanotka.js i zarejestruj tutaj.
   notes: [
-    { id: 'java', name: 'Java', emoji: '📝', desc: 'Cheatsheet z javy.', file: '/notes/java.md' },
+    { id: 'java', name: 'Java Cheatsheet', emoji: '☕',
+      desc: 'Typy danych, String, Collections, Sety i więcej.',
+      file: 'java.md' },
   ],
 };

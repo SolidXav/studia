@@ -188,6 +188,27 @@
 
     marked.setOptions({ gfm: true, breaks: false });
 
+    // ─── MATH PROTECTION ──────────────────────────────────────────────────────
+    // Chroni bloki math przed marked.js (który psuje $, \, _ itp.)
+    let mathStore = [];
+    function protectMath(src) {
+      mathStore = [];
+      // Display math: $$...$$
+      src = src.replace(/\$\$([\s\S]+?)\$\$/g, (m) => {
+        mathStore.push(m);
+        return '\x00MATH' + (mathStore.length - 1) + '\x00';
+      });
+      // Inline math: $...$  (nie łapie samotnych $)
+      src = src.replace(/\$([^\$\n]+?)\$/g, (m) => {
+        mathStore.push(m);
+        return '\x00MATH' + (mathStore.length - 1) + '\x00';
+      });
+      return src;
+    }
+    function restoreMath(html) {
+      return html.replace(/\x00MATH(\d+)\x00/g, (_, i) => mathStore[+i] || '');
+    }
+
     // ─── CALLOUT PARSER (linia po linii) ──────────────────────────────────────
     const CALLOUT_ICONS = {
       info:'ℹ️', note:'📌', tip:'💡', warning:'⚠️',
@@ -248,7 +269,7 @@
           while (bodyLines.length && !bodyLines[0].trim()) bodyLines.shift();
           while (bodyLines.length && !bodyLines[bodyLines.length - 1].trim()) bodyLines.pop();
 
-          const bodyHtml = marked.parse(bodyLines.join('\n'));
+          const bodyHtml = restoreMath(marked.parse(bodyLines.join('\n')));
 
           out.push(
             `<div class="callout" data-t="${type}">` +
@@ -276,14 +297,39 @@
     const matchCt = document.getElementById('matchCt');
     const btt     = document.getElementById('btt');
 
+    // ─── MATHJAX HELPER ──────────────────────────────────────────────────────
+    function typesetMathJax() {
+      if (!window.MathJax) return;
+      function doTypeset() {
+        if (MathJax.typesetClear) MathJax.typesetClear([mdEl]);
+        return MathJax.typesetPromise([mdEl]).catch(function(err) {
+          console.warn('MathJax typeset error:', err);
+        });
+      }
+      if (MathJax.startup && MathJax.startup.promise) {
+        MathJax.startup.promise.then(doTypeset);
+      } else if (MathJax.typesetPromise) {
+        doTypeset();
+      }
+    }
+
     // ─── RENDER ───────────────────────────────────────────────────────────────
     function render(rawText, title) {
-      mdEl.innerHTML = marked.parse(preprocessObsidian(rawText));
+      // 1. Chroń math PRZED przetwarzaniem (callout bodies też parsują marked)
+      const mathSafe     = protectMath(rawText);
+      // 2. Obsidian preprocessing (callout parser wewnątrz używa marked.parse,
+      //    ale math jest już zabezpieczony placeholderami)
+      const preprocessed = preprocessObsidian(mathSafe);
+      // 3. Parsuj resztę markdowna, przywróć math
+      const html         = restoreMath(marked.parse(preprocessed));
+      mdEl.innerHTML     = html;
       postProcess();
       buildTOC();
       vtFile.textContent = title || 'Notatki';
       vMain.scrollTo(0, 0);
       observeHeadings();
+      // 4. MathJax: typeset po wstawieniu treści
+      typesetMathJax();
     }
 
     function postProcess() {
@@ -371,6 +417,7 @@
         mdEl.innerHTML = savedHTML;
         postProcess();
         observeHeadings();
+        typesetMathJax();
         searchOn = false;
       }
       matchCt.style.display = 'none';
@@ -433,35 +480,28 @@
 
     // ─── ŁADOWANIE ────────────────────────────────────────────────────────────
     const noteId = new URLSearchParams(location.search).get('id');
+    const notes  = (window.SH || {}).notes || [];
 
-    function loadScript(id) {
-      return new Promise((resolve, reject) => {
-        window.NOTE_DATA = null;
-        const s = document.createElement('script');
-        s.src = `data-${id}.js`;
-        s.onload = () => window.NOTE_DATA ? resolve(window.NOTE_DATA) : reject();
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
+    function loadMarkdown(id) {
+      const entry = notes.find(n => n.id === id);
+      if (!entry || !entry.file) return Promise.reject('not found');
+      return fetch(entry.file)
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(text => ({ title: entry.name, content: text }));
     }
 
     if (noteId) {
-      loadScript(noteId)
+      loadMarkdown(noteId)
         .then(d => render(d.content, d.title || noteId))
         .catch(() => {
           mdEl.innerHTML = `<p style="color:var(--mist-6);padding:40px 36px;font-size:14px;line-height:2">
             Nie znaleziono notatki <code style="font-family:var(--mono);color:var(--blue)">${noteId}</code>.<br>
-            Upewnij się że plik <code style="font-family:var(--mono);color:var(--blue)">notes/data-${noteId}.js</code> istnieje.<br><br>
+            Upewnij się że plik <code style="font-family:var(--mono);color:var(--blue)">${noteId}.md</code> istnieje w katalogu notes/ i jest zarejestrowany w config.js.<br><br>
             <a href="index.html" style="color:var(--blue)">← Wróć do notatek</a></p>`;
         });
     } else {
-      try {
-        const s = localStorage.getItem('sh-md');
-        const t = localStorage.getItem('sh-title');
-        if (s) render(s, t || 'Notatki');
-        else mdEl.innerHTML = `<p style="color:var(--mist-6);padding:40px 36px;font-size:14px">
-          Brak notatki. <a href="index.html" style="color:var(--blue)">← Wróć do listy</a></p>`;
-      } catch(_) {}
+      mdEl.innerHTML = `<p style="color:var(--mist-6);padding:40px 36px;font-size:14px">
+        Brak notatki. <a href="index.html" style="color:var(--blue)">← Wróć do listy</a></p>`;
     }
 
   })();
