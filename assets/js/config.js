@@ -25,7 +25,7 @@ window.SH = {
         // { name: 'Lab01_Hello.java', path: 'java/sem1/Lab01_Hello.java', size: '2 KB' },
       ],
       r: [
-         { name: 'rossmann.qmd', path: 'r/sem1/rossmann.qmd', size: '1 KB' },
+         { name: 'rossmann.qmd', path: 'rossmann.qmd', size: '1 KB' },
       ],
     },
     stw: {
