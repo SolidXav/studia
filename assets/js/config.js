@@ -53,7 +53,7 @@ window.SH = {
   */
   notes: [
     { id: 'java', name: 'Java Cheatsheet', emoji: '☕',
-      desc: 'Typy danych, String, Collections, Sety i więcej.',
+      desc: 'Cheatsheet do programowania w java.',
       file: 'java.md' },
   ],
 };
