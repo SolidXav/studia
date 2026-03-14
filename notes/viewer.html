@@ -297,6 +297,22 @@
     const matchCt = document.getElementById('matchCt');
     const btt     = document.getElementById('btt');
 
+    // ─── MATHJAX HELPER ──────────────────────────────────────────────────────
+    function typesetMathJax() {
+      if (!window.MathJax) return;
+      function doTypeset() {
+        if (MathJax.typesetClear) MathJax.typesetClear([mdEl]);
+        return MathJax.typesetPromise([mdEl]).catch(function(err) {
+          console.warn('MathJax typeset error:', err);
+        });
+      }
+      if (MathJax.startup && MathJax.startup.promise) {
+        MathJax.startup.promise.then(doTypeset);
+      } else if (MathJax.typesetPromise) {
+        doTypeset();
+      }
+    }
+
     // ─── RENDER ───────────────────────────────────────────────────────────────
     function render(rawText, title) {
       // 1. Chroń math PRZED przetwarzaniem (callout bodies też parsują marked)
@@ -313,11 +329,7 @@
       vMain.scrollTo(0, 0);
       observeHeadings();
       // 4. MathJax: typeset po wstawieniu treści
-      if (window.MathJax && MathJax.typesetPromise) {
-        MathJax.typesetPromise([mdEl]).catch(function(err) {
-          console.warn('MathJax typeset error:', err);
-        });
-      }
+      typesetMathJax();
     }
 
     function postProcess() {
@@ -405,6 +417,7 @@
         mdEl.innerHTML = savedHTML;
         postProcess();
         observeHeadings();
+        typesetMathJax();
         searchOn = false;
       }
       matchCt.style.display = 'none';
