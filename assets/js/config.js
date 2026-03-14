@@ -31,7 +31,7 @@ window.SH = {
     stw: {
       java: [],
       r: [
-        {name: 'wyk1.r', path: '/files/wyk1.r', size: '1 KB' },
+        {name: 'Wykład 10.03.2026', path: 'wyk1.r', size: '1 KB' },
       ],
     },
   },
