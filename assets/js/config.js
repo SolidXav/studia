@@ -48,7 +48,7 @@ window.SH = {
   },
 
   /* ── NOTATKI ───────────────────────────────────────────
-     file: ścieżka do pliku .md w /notes/
+     file: ścieżka relatywna do pliku .md w katalogu notes/
      Wrzuć plik .md z Obsidiana do katalogu notes/ i zarejestruj tutaj.
   */
   notes: [
