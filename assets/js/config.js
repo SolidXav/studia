@@ -53,7 +53,6 @@ window.SH = {
   // Notatki ładowane są przez pliki notes/data-<id>.js
   // Dodaj plik notes/data-mojanotka.js i zarejestruj tutaj.
   notes: [
-    { id: 'java', name: 'Java Cheatsheet', emoji: '☕',
-      desc: 'Typy danych, String, Collections, Sety i więcej.' },
+    { id: 'java', name: 'Java', emoji: '📝', desc: 'Cheatsheet z javy.', file: '/notes/java.md' },
   ],
 };
