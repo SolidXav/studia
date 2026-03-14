@@ -188,6 +188,27 @@
 
     marked.setOptions({ gfm: true, breaks: false });
 
+    // ─── MATH PROTECTION ──────────────────────────────────────────────────────
+    // Chroni bloki math przed marked.js (który psuje $, \, _ itp.)
+    let mathStore = [];
+    function protectMath(src) {
+      mathStore = [];
+      // Display math: $$...$$
+      src = src.replace(/\$\$([\s\S]+?)\$\$/g, (m) => {
+        mathStore.push(m);
+        return '\x00MATH' + (mathStore.length - 1) + '\x00';
+      });
+      // Inline math: $...$  (nie łapie samotnych $)
+      src = src.replace(/\$([^\$\n]+?)\$/g, (m) => {
+        mathStore.push(m);
+        return '\x00MATH' + (mathStore.length - 1) + '\x00';
+      });
+      return src;
+    }
+    function restoreMath(html) {
+      return html.replace(/\x00MATH(\d+)\x00/g, (_, i) => mathStore[+i] || '');
+    }
+
     // ─── CALLOUT PARSER (linia po linii) ──────────────────────────────────────
     const CALLOUT_ICONS = {
       info:'ℹ️', note:'📌', tip:'💡', warning:'⚠️',
@@ -248,7 +269,7 @@
           while (bodyLines.length && !bodyLines[0].trim()) bodyLines.shift();
           while (bodyLines.length && !bodyLines[bodyLines.length - 1].trim()) bodyLines.pop();
 
-          const bodyHtml = marked.parse(bodyLines.join('\n'));
+          const bodyHtml = restoreMath(marked.parse(bodyLines.join('\n')));
 
           out.push(
             `<div class="callout" data-t="${type}">` +
@@ -278,12 +299,25 @@
 
     // ─── RENDER ───────────────────────────────────────────────────────────────
     function render(rawText, title) {
-      mdEl.innerHTML = marked.parse(preprocessObsidian(rawText));
+      // 1. Chroń math PRZED przetwarzaniem (callout bodies też parsują marked)
+      const mathSafe     = protectMath(rawText);
+      // 2. Obsidian preprocessing (callout parser wewnątrz używa marked.parse,
+      //    ale math jest już zabezpieczony placeholderami)
+      const preprocessed = preprocessObsidian(mathSafe);
+      // 3. Parsuj resztę markdowna, przywróć math
+      const html         = restoreMath(marked.parse(preprocessed));
+      mdEl.innerHTML     = html;
       postProcess();
       buildTOC();
       vtFile.textContent = title || 'Notatki';
       vMain.scrollTo(0, 0);
       observeHeadings();
+      // 4. MathJax: typeset po wstawieniu treści
+      if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise([mdEl]).catch(function(err) {
+          console.warn('MathJax typeset error:', err);
+        });
+      }
     }
 
     function postProcess() {
