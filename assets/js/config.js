@@ -25,7 +25,7 @@ window.SH = {
         // { name: 'Lab01_Hello.java', path: 'java/sem1/Lab01_Hello.java', size: '2 KB' },
       ],
       r: [
-         { name: 'rossmann.qmd', path: '/files/rossmann.qmd', size: '1 KB' },
+         { name: 'Zajęcia 12.03.2026', path: 'rossmann.qmd', size: '1 KB' },
       ],
     },
     stw: {
