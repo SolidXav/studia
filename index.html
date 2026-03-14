@@ -299,32 +299,33 @@
       const startBtn = document.getElementById('pomoStartBtn');
       const resetBtn = document.getElementById('pomoResetBtn');
 
-      function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
-      function update(){ display.textContent = fmt(remaining); }
+      function fmt(s) { return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+      function update() { display.textContent = fmt(remaining); }
 
-      function tick(){
-        if(remaining<=0){ clearInterval(iv); iv=null; running=false; startBtn.textContent='▶ Start'; return; }
-        remaining--; update();
+      function tick() {
+        if (remaining <= 0) { clearInterval(iv); iv = null; running = false; startBtn.textContent = '▶ Start'; return; }
+        remaining--;
+        update();
       }
 
-      startBtn.addEventListener('click', function(){
-        if(running){ clearInterval(iv); iv=null; running=false; startBtn.textContent='▶ Start'; }
-        else { iv=setInterval(tick,1000); running=true; startBtn.textContent='⏸ Pauza'; }
+      startBtn.addEventListener('click', function() {
+        if (running) { clearInterval(iv); iv = null; running = false; startBtn.textContent = '▶ Start'; }
+        else { iv = setInterval(tick, 1000); running = true; startBtn.textContent = '⏸ Pauza'; }
       });
 
-      resetBtn.addEventListener('click', function(){
-        clearInterval(iv); iv=null; running=false;
-        remaining=totalSec; update(); startBtn.textContent='▶ Start';
+      resetBtn.addEventListener('click', function() {
+        clearInterval(iv); iv = null; running = false;
+        remaining = totalSec; update(); startBtn.textContent = '▶ Start';
       });
 
-      display.addEventListener('click', function(){
-        if(running) return;
-        var val = prompt('Ustaw czas (minuty):', Math.floor(totalSec/60));
-        if(val===null) return;
-        var m = parseInt(val,10);
-        if(isNaN(m)||m<1) m=25;
-        if(m>180) m=180;
-        totalSec = m*60; remaining = totalSec; update();
+      display.addEventListener('click', function() {
+        if (running) return;
+        const val = prompt('Ustaw czas (minuty):', Math.floor(totalSec / 60));
+        if (val === null) return;
+        let m = parseInt(val, 10);
+        if (isNaN(m) || m < 1) m = 25;
+        if (m > 180) m = 180;
+        totalSec = m * 60; remaining = totalSec; update();
       });
 
       update();

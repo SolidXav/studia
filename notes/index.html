@@ -173,7 +173,7 @@
     }
 
     function escHtml(s){
-      var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+      const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
     }
 
     /* ── SEARCH ── */
@@ -243,7 +243,7 @@
         panels.appendChild(panel);
       });
       /* Re-activate correct tab */
-      var activeTab = tabBar.querySelector('.tab.active');
+      const activeTab = tabBar.querySelector('.tab.active');
       if (activeTab) activeTab.click();
     }
 
