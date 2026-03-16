@@ -34,6 +34,18 @@ window.SH = {
         { name: 'Wykład 10.03.2026', path: 'wyk1.r', size: '1 KB', date: '2026-03-10' },
       ],
     },
+     poc: {
+        java: [{name: 'algorytm.java', path: 'algorytm.java', size: '1 KB', date: '2026-3-16' },
+               {name: 'JavaCasting', path: 'JavaCasting.java', size: '1 KB', date: '2026-3-16' },
+               {name: 'JavaConditions', path: 'JavaConditions.java', size: '1 KB', date: '2026-3-16' },
+               {name: 'kalkulator', path: 'kalkulator.java', size: '1 KB', date: '2026-3-16' },
+               {name: 'Liczba Pierwsza', path: 'LiczbaPierwsza.java', size: '1 KB', date: '2026-3-16' },
+               {name: 'LiczbyParzyste', path: 'LiczbyParzysteNieparzyste.java', size: '1 KB', date: '2026-3-16' },
+               {name: 'loops', path: 'loops.java', size: '1 KB', date: '2026-3-16' },
+               {name: 'Rokprzestepny', path: 'RokPrzestepny.java', size: '1 KB', date: '2026-3-16' },
+               {name: 'Weryfikacja', path: 'Weryfikacja.java', size: '1 KB', date: '2026-3-16' },
+   
+              ],
   },
 
   /* ── QUIZY ─────────────────────────────────────────────
