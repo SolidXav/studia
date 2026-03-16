@@ -35,19 +35,19 @@ window.SH = {
       ],
     },
      poc: {
-        java: [
-           {name: 'algorytm', path: 'algorytm.java', size: '1 KB', date: '2026-3-16' },
-            {name: 'JavaCasting', path: 'JavaCasting.java', size: '1 KB', date: '2026-3-16' },
-            {name: 'JavaConditions', path: 'JavaConditions.java', size: '1 KB', date: '2026-3-16' },
-            {name: 'kalkulator', path: 'kalkulator.java', size: '1 KB', date: '2026-3-16' },
-            {name: 'Liczba Pierwsza', path: 'LiczbaPierwsza.java', size: '1 KB', date: '2026-3-16' },
-            {name: 'LiczbyParzyste', path: 'LiczbyParzysteNieparzyste.java', size: '1 KB', date: '2026-3-16' },
-            {name: 'loops', path: 'loops.java', size: '1 KB', date: '2026-3-16' },
-            {name: 'Rokprzestepny', path: 'RokPrzestepny.java', size: '1 KB', date: '2026-3-16' },
-            {name: 'Weryfikacja', path: 'Weryfikacja.java', size: '1 KB', date: '2026-3-16' },
-        ],
-  },
-  },
+      java: [
+        { name: 'algorytm',         path: 'algorytm.java',                    size: '1 KB', date: '2026-03-16' },
+        { name: 'JavaCasting',       path: 'JavaCasting.java',                 size: '1 KB', date: '2026-03-16' },
+        { name: 'JavaConditions',    path: 'JavaConditions.java',              size: '1 KB', date: '2026-03-16' },
+        { name: 'kalkulator',        path: 'kalkulator.java',                  size: '1 KB', date: '2026-03-16' },
+        { name: 'Liczba Pierwsza',   path: 'LiczbaPierwsza.java',              size: '1 KB', date: '2026-03-16' },
+        { name: 'LiczbyParzyste',    path: 'LiczbyParzysteNieparzyste.java',   size: '1 KB', date: '2026-03-16' },
+        { name: 'loops',             path: 'loops.java',                       size: '1 KB', date: '2026-03-16' },
+        { name: 'Rokprzestepny',     path: 'RokPrzestepny.java',               size: '1 KB', date: '2026-03-16' },
+        { name: 'Weryfikacja',       path: 'Weryfikacja.java',                 size: '1 KB', date: '2026-03-16' },
+      ],
+      r: [],   // ← BRAKOWAŁO TEGO
+    },
 
   /* ── QUIZY ─────────────────────────────────────────────
      file: ścieżka do pliku quiz.html w /quizzes/
