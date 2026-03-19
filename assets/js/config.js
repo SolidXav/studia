@@ -48,13 +48,18 @@ window.SH = {
       ],
       r: [],   // ← BRAKOWAŁO TEGO
     },
+     pow:  { java: [], r: [] },
+   mc:   { java: [], r: [] },
+   mw:   { java: [], r: [] },
+   matc: { java: [], r: [] },
+   matw: { java: [], r: [] },
 
   /* ── QUIZY ─────────────────────────────────────────────
      file: ścieżka do pliku quiz.html w /quizzes/
   */
   },
   quizzes: {
-    sem1: [
+    poc: [
       { id: 'java-basics', name: 'Podstawy Javy', subject: 'Java',
         file: 'sem1/java/quiz.html', questions: 5, difficulty: 'łatwy' },
     ],
