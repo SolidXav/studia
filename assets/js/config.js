@@ -52,6 +52,7 @@ window.SH = {
   /* ── QUIZY ─────────────────────────────────────────────
      file: ścieżka do pliku quiz.html w /quizzes/
   */
+  },
   quizzes: {
     sem1: [
       { id: 'java-basics', name: 'Podstawy Javy', subject: 'Java',
