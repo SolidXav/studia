@@ -26,6 +26,7 @@ window.SH = {
       ],
       r: [
          { name: 'Zajęcia 12.03.2026', path: 'rossmann.qmd', size: '1 KB', date: '2026-03-12' },
+         { name: 'Zajecia 19.03.2026', path: 'rossmann-better.qmd', size: '1 KB', date: '19.03.2026' },
       ],
     },
     stw: {
