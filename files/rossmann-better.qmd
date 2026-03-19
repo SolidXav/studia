@@ -1,0 +1,146 @@
+---
+title: "new_ross"
+format: html
+editor: visual
+---
+
+#### Wczytaj potrzebne pakiety.
+
+```{r}
+library(dplyr)
+```
+
+# Przygotowanie danych
+
+#### Wczytaj dane z pliku csv.
+
+```{r}
+ros <- read.csv("../rawdata/train.csv")
+head(ros)
+```
+
+#### Sprawdź strukturę podanego pliku.
+
+```{r}
+str(ros)
+ncol(ros)
+nrow(ros)
+summary(ros)
+ros |> sapply(class) |> table()
+table(sapply(ros, class)) ## to samo co wyzej (wyzej w przetwarzaniu potokowym)
+```
+
+#### Wyznacz łączną sprzedaż poszczególnych sklepów w roku 2014. Ogranicz zbiór do tych sklepów, które były obserwowane przez cały rok.
+
+```{r}
+ros_sale <- ros |>
+  filter(substr(Date, 1, 4) == "2014") |>
+  summarise(
+    Sales = sum(Sales), 
+    FirstDate = min(Date), 
+    LastDate = max(Date), 
+    .by = Store
+    ) |> 
+  filter(FirstDate=="2014-01-01", LastDate == "2014-12-31") |>
+  select(-FirstDate, -LastDate) |>
+  arrange(Sales)
+
+ros_sale
+```
+
+#### Zapisz wartości rocznej sprzedaży do wektora sales.
+
+```{r}
+sales <- ros_sale$Sales
+head(sales)
+tail(sales)
+```
+
+# Prezentacja danych
+
+#### Zaprezentuj roczną sprzedaż za pomocą szeregu strukturalnego przedziałowego.
+
+```{r}
+table(cut(sales, breaks = seq(
+  from = 500000, 
+  to = 800000, 
+  by = 500000)))
+```
+
+#### Przedstaw rozkład rocznej sprzedaży za pomocą histogramu.
+
+```{r}
+hist(sales/1000000, 
+     breaks = seq(0.5, 8, 0.5), 
+     xlab = "Roczna sprzedaż (mln, euro)", 
+     ylab = "Liczba sklepów", 
+     main = "Rozkład rocznej sprzedaży sklepów sieci Rossmann")
+```
+
+#### Komentarz:
+
+Po prawej stronie rozkładu obserwowane są wartości odstające, co może świadczyć o asymetrii prawostronnej.
+
+# Analiza struktury
+
+## Miary klasyczne
+
+#### Wyznacz średnią arytmetyczną
+
+```{r}
+sr_ze_wzoru <- sum(sales)/length(sales)
+
+sr <- mean(sales)
+sr 
+```
+
+##### **Interpretacja:** Roczna sprzedaż badanych sklepów wynosi przeciętnie 2145342 euro.
+
+#### Wyznacz wariancję (z populacj9)
+
+$$
+S^2 = \frac{1}{n}\sum_{i=1}^{n}(x_i-\overline{x})^2
+$$
+
+```{r}
+n <- length(sales)
+S2 <- 1/n*sum((sales-mean(sales))^2)
+S2
+```
+
+```{r}
+S2_funkcja <- var(sales)
+S2_funkcja ## Jest to wariancja z próby (nie z populacji)
+var(sales)*(n-1)/(n) ## To jest okej!
+```
+
+##### **Interpretacja:** Nie interpretujemy, ze względu na to, że wariancja wyrażona jest wyrażona w euro\^2.
+
+#### Wyznacz odchylenie standardowe (z populacji)
+
+```{r}
+S <- sqrt(S2)
+S
+```
+
+```{r}
+sd(sales) # Jest to odchylenie z próby (nie z populacji)
+sd(sales)*sqrt(n/(n-1))
+```
+
+##### **Interpretacja**: wartości rocznej sprzedaży odchylaja się o średniej przeciętnie o 766840 euro.
+
+#### Wyznacz współczynnik zmienności
+
+```{r}
+V <- S/sr
+V
+```
+
+##### **Interpretacja**: Roczna sprzedaż charakteryzuje się umiarkowanym zróżnicowaniem według przyjętych norm.
+
+```{r}
+
+```
+
+## Miary pozycyjne
